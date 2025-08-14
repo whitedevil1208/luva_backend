@@ -42,6 +42,9 @@ class CompanyMaster(Base):
     company_city = Column("Company City", String(100))
     company_state = Column("Company State", String(100))
     company_country = Column("Company Country", String(100))
+    # New columns added here
+    company_email = Column("Company Email", String(255))
+    company_phone_number = Column("Company Phone Number", String(56))
     active = Column("Active", Boolean, default=True)
     
 class CompanyEmployeeMaster(Base):
@@ -56,6 +59,8 @@ class CompanyEmployeeMaster(Base):
     designation = Column("Designation", String(156))
     role = Column("Role", String(50))
     password = Column("Password", String(256))
+    # New column added here
+    picture = Column("Picture", String(255))
     active = Column("Active", Boolean)
 
 # Dependency to get a DB session
@@ -87,6 +92,8 @@ def get_employee_model_for_company(company_code: str):
         designation = Column("Designation", String(156))
         role = Column("Role", String(50))
         password = Column("Password", String(256))
+        # New column added here
+        picture = Column("Picture", String(255))
         active = Column("Active", Boolean)
     
     return DynamicEmployee

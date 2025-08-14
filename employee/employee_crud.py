@@ -23,6 +23,8 @@ class EmployeeCreate(BaseModel):
     designation: str
     role: str
     password: str
+    # New field added here
+    picture: Optional[str] = None
 
 class EmployeeUpdate(BaseModel):
     first_name: Optional[str] = None
@@ -30,12 +32,9 @@ class EmployeeUpdate(BaseModel):
     email: Optional[EmailStr] = None
     mobile: Optional[str] = None
     designation: Optional[str] = None
+    # New field added here
+    picture: Optional[str] = None
     active: Optional[bool] = None
-
-class TeamCreate(BaseModel):
-    company_code: str
-    team_name: str
-    team_description: str
 
 # --- Hash Password ---
 def hash_password(password: str) -> str:
@@ -56,9 +55,9 @@ def add_employee(data: EmployeeCreate, db: Session = Depends(get_db)):
     employee_table_name = f"{data.company_code}_Employees"
     insert_sql = text(f"""
         INSERT INTO `{employee_table_name}` (
-            `Company Code`, `Employee Code`, `First Name`, `Last Name`, `Email`, `Mobile`, `Designation`, `Role`, `Password`, `Active`
+            `Company Code`, `Employee Code`, `First Name`, `Last Name`, `Email`, `Mobile`, `Designation`, `Role`, `Password`, `Picture`, `Active`
         ) VALUES (
-            :company_code, :employee_code, :first_name, :last_name, :email, :mobile, :designation, :role, :password, :active
+            :company_code, :employee_code, :first_name, :last_name, :email, :mobile, :designation, :role, :password, :picture, :active
         )
     """)
 
@@ -72,6 +71,7 @@ def add_employee(data: EmployeeCreate, db: Session = Depends(get_db)):
         "designation": data.designation,
         "role": data.role,
         "password": hashed_pw,
+        "picture": data.picture,
         "active": True
     }
 
@@ -81,49 +81,7 @@ def add_employee(data: EmployeeCreate, db: Session = Depends(get_db)):
     except IntegrityError as e:
         raise HTTPException(status_code=400, detail="Employee code or email already exists.")
         
-    return {"message": f"Employee added successfully."}
-
-# --- Add Team (NEW ENDPOINT) ---
-@app.post("/add_team")
-def add_team(data: TeamCreate, db: Session = Depends(get_db)):
-    # Check if the company exists first
-    company = db.query(CompanyMaster).filter(CompanyMaster.company_code == data.company_code).first()
-    if not company:
-        raise HTTPException(status_code=404, detail="Company does not exist.")
-    
-    # Dynamically create a team table for the company if it doesn't exist
-    team_table_name = f"{data.company_code}_Teams"
-    create_table_sql = text(f"""
-        CREATE TABLE IF NOT EXISTS `{team_table_name}` (
-            `Id` INT AUTO_INCREMENT PRIMARY KEY,
-            `Team Name` VARCHAR(255) UNIQUE,
-            `Team Description` TEXT
-        )
-    """)
-    db.execute(create_table_sql)
-    db.commit()
-
-    # Insert the new team into the dynamic team table
-    insert_sql = text(f"""
-        INSERT INTO `{team_table_name}` (
-            `Team Name`, `Team Description`
-        ) VALUES (
-            :team_name, :team_description
-        )
-    """)
-    params = {
-        "team_name": data.team_name,
-        "team_description": data.team_description
-    }
-
-    try:
-        db.execute(insert_sql, params)
-        db.commit()
-    except IntegrityError:
-        raise HTTPException(status_code=400, detail="Team with this name already exists.")
-    
-    return {"message": "Team added successfully."}
-
+    return {"message": "Employee added successfully."}
 
 # --- Get Employee by Code ---
 @app.get("/get_employee/{company_code}/{employee_code}")
@@ -161,6 +119,9 @@ def update_employee(company_code: str, employee_code: str, data: EmployeeUpdate,
     if data.designation is not None:
         updates.append("`Designation` = :designation")
         params["designation"] = data.designation
+    if data.picture is not None:
+        updates.append("`Picture` = :picture")
+        params["picture"] = data.picture
     if data.active is not None:
         updates.append("`Active` = :active")
         params["active"] = data.active

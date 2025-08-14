@@ -19,6 +19,9 @@ class CompanyCreate(BaseModel):
     company_city: str
     company_state: str
     company_country: str
+    # New fields added here
+    company_email: Optional[str] = None
+    company_phone_number: Optional[str] = None
 
 class CompanyUpdate(BaseModel):
     company_name: Optional[str] = None
@@ -26,6 +29,8 @@ class CompanyUpdate(BaseModel):
     company_city: Optional[str] = None
     company_state: Optional[str] = None
     company_country: Optional[str] = None
+    company_email: Optional[str] = None
+    company_phone_number: Optional[str] = None
     active: Optional[bool] = None
 
 # --- CREATE Company ---
@@ -43,6 +48,9 @@ def create_company(data: CompanyCreate, db: Session = Depends(get_db)):
         company_city=data.company_city,
         company_state=data.company_state,
         company_country=data.company_country,
+        # New fields assigned here
+        company_email=data.company_email,
+        company_phone_number=data.company_phone_number,
         active=True
     )
     
@@ -66,6 +74,7 @@ def create_company(data: CompanyCreate, db: Session = Depends(get_db)):
                 `Designation` VARCHAR(156),
                 `Role` VARCHAR(50),
                 `Password` VARCHAR(256),
+                `Picture` VARCHAR(255),
                 `Active` BOOLEAN DEFAULT TRUE,
                 FOREIGN KEY (`Company Code`) REFERENCES `Company Master` (`Company Code`) ON DELETE CASCADE
             )
@@ -102,6 +111,8 @@ def get_all_companies(db: Session = Depends(get_db)):
             "company_city": company.company_city,
             "company_state": company.company_state,
             "company_country": company.company_country,
+            "company_email": company.company_email,
+            "company_phone_number": company.company_phone_number,
             "active": company.active
         }
         for company in companies
@@ -121,6 +132,8 @@ def get_company(company_code: str, db: Session = Depends(get_db)):
         "company_city": company.company_city,
         "company_state": company.company_state,
         "company_country": company.company_country,
+        "company_email": company.company_email,
+        "company_phone_number": company.company_phone_number,
         "active": company.active
     }
 
